@@ -13,7 +13,7 @@
             <div class="header-content">
                 <div class="logo">
                     <span class="logo-icon">🤖</span>
-                    <span class="logo-text">MCP Chat</span>
+                    <span class="logo-text">Monday Chat</span>
                 </div>
                 <div class="header-actions">
                     <button id="settingsBtn" class="icon-btn" title="Configurações">
@@ -50,24 +50,25 @@
                 <div class="settings-content">
                     <!-- MCP Configuration -->
                     <div class="config-section">
-                        <h4>🔗 Servidor MCP</h4>
+                        <h4>📋 Monday.com MCP</h4>
                         <div class="form-group">
                             <label for="mcpUrl">URL do Servidor:</label>
                             <input type="url" id="mcpUrl" placeholder="ws://localhost:8080/mcp" />
                         </div>
                         <div class="form-group">
-                            <label for="mcpApiKey">API Key (opcional):</label>
-                            <input type="password" id="mcpApiKey" placeholder="Sua API key..." />
+                            <label for="mcpApiKey">Monday Token:</label>
+                            <input type="password" id="mcpApiKey" placeholder="Token do Monday.com..." />
                         </div>
-                        <button id="testMcpConnection" class="btn btn-secondary">Testar Conexão</button>
+                        <button id="testMcpConnection" class="btn btn-secondary">Testar Monday</button>
                     </div>
 
                     <!-- LLM Configuration -->
                     <div class="config-section">
-                        <h4>🧠 Modelo LLM</h4>
+                        <h4>🧠 Google Gemini</h4>
                         <div class="form-group">
                             <label for="llmProvider">Provedor:</label>
                             <select id="llmProvider">
+                                <option value="google">Google Gemini</option>
                                 <option value="openai">OpenAI</option>
                                 <option value="anthropic">Anthropic (Claude)</option>
                                 <option value="local">Local/Ollama</option>
@@ -75,18 +76,18 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="llmApiKey">API Key:</label>
-                            <input type="password" id="llmApiKey" placeholder="Sua API key..." />
+                            <label for="llmApiKey">Google API Key:</label>
+                            <input type="password" id="llmApiKey" placeholder="AIzaSy..." />
                         </div>
                         <div class="form-group">
                             <label for="llmModel">Modelo:</label>
-                            <input type="text" id="llmModel" placeholder="gpt-4, claude-3-sonnet, etc." />
+                            <input type="text" id="llmModel" placeholder="gemini-1.5-flash, gemini-1.5-pro" />
                         </div>
                         <div class="form-group">
-                            <label for="llmBaseUrl">Base URL (para custom/local):</label>
-                            <input type="url" id="llmBaseUrl" placeholder="http://localhost:11434/v1" />
+                            <label for="llmBaseUrl">Base URL:</label>
+                            <input type="url" id="llmBaseUrl" placeholder="https://generativelanguage.googleapis.com/v1beta" />
                         </div>
-                        <button id="testLlmConnection" class="btn btn-secondary">Testar LLM</button>
+                        <button id="testLlmConnection" class="btn btn-secondary">Testar Gemini</button>
                     </div>
 
                     <!-- Advanced Settings -->

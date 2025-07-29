@@ -42,17 +42,22 @@ chrome.runtime.onStartup.addListener(() => {
 async function setDefaultSettings() {
     const defaultSettings = {
         mcp: {
-            url: '', // Remover URL padrão para evitar conexão automática
-            apiKey: '',
+            url: 'ws://localhost:8080/mcp', // URL padrão para Monday MCP server  
+            apiKey: '', // Token será configurado no servidor
             connected: false,
-            autoReconnect: false // Desabilitar auto-reconexão por padrão
+            autoReconnect: true, // Habilitar auto-reconexão para Monday MCP
+            provider: 'monday-api', // Identificar como Monday MCP
+            config: {
+                token: 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTg5NDIyNywiYWFpIjoxMSwidWlkIjo3NjY2NjgyOSwiaWFkIjoiMjAyNS0wNS0zMFQxMjoxMzo1MS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTA0NTk2ODMsInJnbiI6InVzZTEifQ.UZOSSrReMfkHFK36FmtY3yGDWdUXGVB47hCzADP9uZ4',
+                enableDynamicTools: true
+            }
         },
         llm: {
-            provider: 'openai',
-            apiKey: '',
-            model: 'gpt-4',
-            baseUrl: '',
-            maxTokens: 4000,
+            provider: 'google', // Usar Google Gemini
+            apiKey: 'AIzaSyBKdGouQzBbm6Dwm5pyPhDt2MCUpDPGAig',
+            model: 'gemini-1.5-flash',
+            baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+            maxTokens: 8192, // Gemini 1.5 Flash suporta mais tokens
             temperature: 0.7,
             streaming: true
         },

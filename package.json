@@ -1,38 +1,39 @@
 {
-  "name": "chrome-mcp-chat-server",
+  "name": "chrome-mcp-chat",
   "version": "1.0.0",
-  "description": "Servidor MCP de exemplo para Chrome MCP Chat Extension",
-  "main": "mcp-server-example.js",
+  "description": "Chrome extension for AI chat with MCP integration - Monday API focused",
+  "main": "monday-mcp-server.js",
   "scripts": {
-    "start": "node mcp-server-example.js",
-    "dev": "nodemon mcp-server-example.js",
+    "start": "node monday-mcp-server.js",
+    "dev": "nodemon monday-mcp-server.js",
+    "monday": "node monday-mcp-server.js",
+    "install-monday": "npm install @mondaydotcomorg/monday-api-mcp",
     "test": "echo \"No tests specified\" && exit 0"
   },
   "keywords": [
+    "chrome-extension",
     "mcp",
-    "model-context-protocol",
-    "websocket",
-    "ai",
-    "chat",
-    "chrome-extension"
+    "monday.com",
+    "ai-chat",
+    "google-gemini",
+    "websocket"
   ],
-  "author": "Chrome MCP Chat Extension",
+  "author": "Eduardo Pereira <eduardo.pereira@alest.com.br>",
   "license": "MIT",
   "dependencies": {
     "ws": "^8.14.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.2"
+  },
+  "optionalDependencies": {
+    "@mondaydotcomorg/monday-api-mcp": "latest"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/chrome-mcp-chat"
-  },
-  "bugs": {
-    "url": "https://github.com/your-username/chrome-mcp-chat/issues"
-  },
-  "homepage": "https://github.com/your-username/chrome-mcp-chat#readme"
+    "url": "https://github.com/EduPereiraAlest/McpChatAlest.git"
+  }
 }

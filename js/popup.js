@@ -39,17 +39,22 @@ class MCPChatExtension {
     constructor() {
         this.settings = {
             mcp: {
-                url: '', // Remover URL padrão para evitar conexão automática
-                apiKey: '',
+                url: 'ws://localhost:8080/mcp', // URL padrão para Monday MCP server
+                apiKey: '', // Token será configurado no servidor
                 connected: false,
-                autoReconnect: false // Adicionar controle de auto-reconexão
+                autoReconnect: true, // Habilitar auto-reconexão para Monday MCP
+                provider: 'monday-api', // Identificar como Monday MCP
+                config: {
+                    token: 'eyJhbGciOiJIUzI1NiJ9.eyJ0aWQiOjUxOTg5NDIyNywiYWFpIjoxMSwidWlkIjo3NjY2NjgyOSwiaWFkIjoiMjAyNS0wNS0zMFQxMjoxMzo1MS4wMDBaIiwicGVyIjoibWU6d3JpdGUiLCJhY3RpZCI6MTA0NTk2ODMsInJnbiI6InVzZTEifQ.UZOSSrReMfkHFK36FmtY3yGDWdUXGVB47hCzADP9uZ4',
+                    enableDynamicTools: true
+                }
             },
             llm: {
-                provider: 'openai',
-                apiKey: '',
-                model: 'gpt-4',
-                baseUrl: '',
-                maxTokens: 4000,
+                provider: 'google', // Usar Google Gemini
+                apiKey: 'AIzaSyBKdGouQzBbm6Dwm5pyPhDt2MCUpDPGAig',
+                model: 'gemini-1.5-flash',
+                baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+                maxTokens: 8192, // Gemini 1.5 Flash suporta mais tokens
                 temperature: 0.7,
                 streaming: true
             }
@@ -282,6 +287,8 @@ class MCPChatExtension {
                 modelInput.placeholder = 'gpt-4, gpt-3.5-turbo, etc.';
             } else if (provider === 'anthropic') {
                 modelInput.placeholder = 'claude-3-sonnet, claude-3-opus, etc.';
+            } else if (provider === 'google') {
+                modelInput.placeholder = 'gemini-1.5-flash, gemini-1.5-pro, etc.';
             }
         }
     }
@@ -543,6 +550,19 @@ class MCPChatExtension {
         
         // Configure request based on provider
         switch (settings.provider) {
+            case 'google':
+                url = `${settings.baseUrl}/models/${settings.model}:generateContent?key=${settings.apiKey}`;
+                body = {
+                    contents: [{
+                        parts: [{ text: message }]
+                    }],
+                    generationConfig: {
+                        maxOutputTokens: settings.maxTokens,
+                        temperature: settings.temperature
+                    }
+                };
+                break;
+                
             case 'openai':
                 url = 'https://api.openai.com/v1/chat/completions';
                 headers['Authorization'] = `Bearer ${settings.apiKey}`;
@@ -655,6 +675,8 @@ class MCPChatExtension {
 
     extractMessageFromResponse(data, provider) {
         switch (provider) {
+            case 'google':
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             case 'openai':
             case 'local':
             case 'custom':
@@ -668,6 +690,9 @@ class MCPChatExtension {
 
     extractStreamingContent(data, provider) {
         switch (provider) {
+            case 'google':
+                // Google Gemini streaming format
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             case 'openai':
             case 'local':
             case 'custom':
@@ -866,18 +891,14 @@ class MCPChatExtension {
     }
 
     checkWelcomeMessage() {
-        const hasLLMConfig = this.settings.llm?.apiKey && this.settings.llm?.provider;
+        // Extensão vem pré-configurada com Google Gemini e Monday MCP
+        // Sempre esconder mensagem de boas-vindas e mostrar chat
         const welcomeElement = document.getElementById('welcomeMessage');
         const messagesContainer = document.getElementById('messagesContainer');
         
         if (welcomeElement && messagesContainer) {
-            if (!hasLLMConfig) {
-                welcomeElement.style.display = 'block';
-                messagesContainer.style.display = 'none';
-            } else {
-                welcomeElement.style.display = 'none';
-                messagesContainer.style.display = 'flex';
-            }
+            welcomeElement.style.display = 'none';
+            messagesContainer.style.display = 'flex';
         } else {
             console.warn('⚠️ Elementos de boas-vindas não encontrados');
         }
