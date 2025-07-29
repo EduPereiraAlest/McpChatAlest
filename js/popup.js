@@ -108,8 +108,27 @@ class MCPChatExtension {
                 this.settings = { ...this.settings, ...result.mcpChatSettings };
                 console.log('⚙️ Configurações carregadas:', this.settings);
             }
+            
+            // 🚨 FORÇAR STREAMING COMO FALSE PARA DEBUG
+            this.settings.llm.streaming = false;
+            console.log('🔧 Streaming forçado para FALSE:', this.settings.llm.streaming);
+            
         } catch (error) {
             console.error('❌ Erro ao carregar configurações:', error);
+        }
+    }
+
+    // 🧹 FUNÇÃO PARA LIMPAR CACHE DE CONFIGURAÇÕES
+    async clearSettingsCache() {
+        try {
+            await chrome.storage.sync.remove(['mcpChatSettings']);
+            console.log('🧹 Cache de configurações limpo');
+            // Recarregar configurações padrão
+            await this.loadSettings();
+            return true;
+        } catch (error) {
+            console.error('❌ Erro ao limpar cache:', error);
+            return false;
         }
     }
 
