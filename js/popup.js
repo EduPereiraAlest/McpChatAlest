@@ -575,7 +575,15 @@ class MCPChatExtension {
     }
 
     async callLLM(message, customSettings = null) {
+        console.log('📞 INICIO callLLM - Mensagem:', message?.substring(0, 100) + '...');
+        
         const settings = customSettings || this.settings.llm;
+        console.log('⚙️ Settings sendo usados:', {
+            provider: settings.provider,
+            model: settings.model,
+            baseUrl: settings.baseUrl,
+            hasApiKey: !!settings.apiKey
+        });
         
         const headers = {
             'Content-Type': 'application/json'
@@ -584,13 +592,17 @@ class MCPChatExtension {
         let url = '';
         let body = {};
         
+        console.log('🔧 Configurando request para provider:', settings.provider);
+        
         // Configure request based on provider
         switch (settings.provider) {
             case 'google':
                 url = `${settings.baseUrl}/models/${settings.model}:generateContent?key=${settings.apiKey}`;
+                console.log('🌐 URL Google Gemini:', url.replace(settings.apiKey, '***'));
                 
                 // Para Gemini, sempre incluir system prompt Monday.com
                 const fullMessage = `${this.getSystemPrompt()}\n\n---\n\nUsuário: ${message}`;
+                console.log('📝 Mensagem completa (primeiros 200 chars):', fullMessage.substring(0, 200) + '...');
                 
                 body = {
                     contents: [{
@@ -601,6 +613,11 @@ class MCPChatExtension {
                         temperature: settings.temperature
                     }
                 };
+                console.log('📦 Body da requisição:', {
+                    contentsCount: body.contents.length,
+                    maxOutputTokens: body.generationConfig.maxOutputTokens,
+                    temperature: body.generationConfig.temperature
+                });
                 break;
                 
             case 'openai':
@@ -649,22 +666,37 @@ class MCPChatExtension {
         
         console.log('🧠 Enviando para LLM:', { provider: settings.provider, model: settings.model, message: message.substring(0, 100) + '...' });
         
+        console.log('🌐 Iniciando fetch para URL:', url.includes('key=') ? url.replace(/key=[^&]+/, 'key=***') : url);
+        console.log('📡 Headers:', headers);
+        console.log('📦 Body (JSON):', JSON.stringify(body).substring(0, 300) + '...');
+        
         const response = await fetch(url, {
             method: 'POST',
             headers,
             body: JSON.stringify(body)
         });
         
+        console.log('✅ Fetch completado! Status:', response.status, 'OK:', response.ok);
+        console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+        
         if (!response.ok) {
             const errorText = await response.text();
+            console.error('❌ Response error text:', errorText);
             throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
+        console.log('🔄 Processando resposta... Streaming:', settings.streaming);
+        
         if (settings.streaming) {
+            console.log('📺 Iniciando streaming response...');
             return this.handleStreamingResponse(response);
         } else {
+            console.log('📄 Processando resposta JSON...');
             const data = await response.json();
-            return this.extractMessageFromResponse(data, settings.provider);
+            console.log('📊 Data recebida:', JSON.stringify(data).substring(0, 300) + '...');
+            const extractedMessage = this.extractMessageFromResponse(data, settings.provider);
+            console.log('✉️ Mensagem extraída:', extractedMessage?.substring(0, 200) + '...');
+            return extractedMessage;
         }
     }
 
@@ -761,19 +793,34 @@ class MCPChatExtension {
         // Show typing indicator
         this.showTypingIndicator(true);
         
+        console.log('🚀 INICIO - Enviando mensagem:', message);
+        
         try {
             // Send message directly to LLM with enhanced system prompt
-            console.log('🧠 Enviando mensagem para LLM com conhecimento Monday.com...');
+            console.log('🧠 Chamando LLM Google Gemini...');
+            console.log('⚙️ Settings LLM:', {
+                provider: this.settings.llm.provider,
+                model: this.settings.llm.model,
+                apiKey: this.settings.llm.apiKey ? '***' + this.settings.llm.apiKey.slice(-4) : 'MISSING'
+            });
+            
             const response = await this.callLLM(message);
+            console.log('✅ Resposta recebida do LLM:', response?.substring(0, 200) + '...');
             
             // Add AI response to chat (sem processamento de ferramentas)
             this.addMessage(response, 'ai');
+            console.log('✅ Mensagem adicionada ao chat');
             
         } catch (error) {
-            console.error('❌ Erro ao enviar mensagem:', error);
+            console.error('❌ ERRO COMPLETO:', error);
+            console.error('❌ Error name:', error.name);
+            console.error('❌ Error message:', error.message);
+            console.error('❌ Error stack:', error.stack);
             this.addMessage(`❌ Erro: ${error.message}`, 'system');
         } finally {
+            console.log('🔄 Removendo indicador de digitação...');
             this.showTypingIndicator(false);
+            console.log('✅ FIM - Processo completo');
         }
     }
 
