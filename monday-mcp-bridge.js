@@ -102,10 +102,16 @@ class MondayMCPBridge {
 
             ws.on('message', async (data) => {
                 try {
-                    const message = JSON.parse(data.toString());
+                    const rawMessage = data.toString();
+                    console.log('📨 Mensagem bruta recebida:', rawMessage);
+                    
+                    const message = JSON.parse(rawMessage);
+                    console.log('📨 Mensagem parseada:', message);
+                    
                     await this.handleWebSocketMessage(ws, message);
                 } catch (error) {
                     console.error('❌ Erro ao processar mensagem WebSocket:', error);
+                    console.error('❌ Mensagem problemática:', data.toString());
                     this.sendError(ws, 'Erro ao processar mensagem', error.message);
                 }
             });
@@ -135,11 +141,15 @@ class MondayMCPBridge {
     }
 
     async handleWebSocketMessage(ws, message) {
-        console.log('📨 Mensagem WebSocket recebida:', message.type);
+        console.log('📨 Mensagem WebSocket recebida:', message.type, JSON.stringify(message));
 
         switch (message.type) {
             case 'ping':
-                this.sendMessage(ws, { type: 'pong', timestamp: Date.now() });
+                console.log('🏓 Recebido PING - enviando PONG...');
+                const pongMessage = { type: 'pong', timestamp: Date.now() };
+                console.log('🏓 Enviando PONG:', JSON.stringify(pongMessage));
+                this.sendMessage(ws, pongMessage);
+                console.log('✅ PONG enviado com sucesso');
                 break;
 
             case 'list_tools':
@@ -191,8 +201,15 @@ class MondayMCPBridge {
     }
 
     sendMessage(ws, message) {
+        console.log('📤 Tentando enviar mensagem:', JSON.stringify(message));
+        console.log('📤 WebSocket readyState:', ws.readyState, '(1=OPEN)');
+        
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(message));
+            const jsonMessage = JSON.stringify(message);
+            ws.send(jsonMessage);
+            console.log('✅ Mensagem enviada com sucesso:', jsonMessage);
+        } else {
+            console.error('❌ WebSocket não está aberto. ReadyState:', ws.readyState);
         }
     }
 

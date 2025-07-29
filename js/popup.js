@@ -488,6 +488,22 @@ class MCPChatExtension {
         console.log('📨 Mensagem MCP recebida:', message);
         
         switch (message.type) {
+            case 'connection':
+                console.log('🔗 Conexão MCP estabelecida:', message);
+                if (message.status === 'connected') {
+                    this.settings.mcp.connected = true;
+                    this.isConnecting = false;
+                    this.updateConnectionStatus();
+                    console.log('✅ MCP conectado com sucesso!');
+                    
+                    // Esconder mensagem de boas-vindas se conectou
+                    this.checkWelcomeMessage();
+                }
+                break;
+            case 'pong':
+                console.log('🏓 Recebido PONG do MCP');
+                // Manter conexão viva
+                break;
             case 'auth_success':
                 console.log('🔐 Autenticação MCP bem-sucedida');
                 break;
@@ -497,6 +513,14 @@ class MCPChatExtension {
                 break;
             case 'tool_response':
                 this.handleToolResponse(message);
+                break;
+            case 'mcp_response':
+                console.log('📋 Resposta MCP:', message);
+                // Processar resposta do Monday MCP
+                break;
+            case 'error':
+                console.error('❌ Erro MCP:', message);
+                this.showNotification(`❌ Erro MCP: ${message.error}`, 'error');
                 break;
             default:
                 console.log('📨 Mensagem MCP não reconhecida:', message);
