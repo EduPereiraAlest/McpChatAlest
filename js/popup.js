@@ -588,10 +588,24 @@ class MCPChatExtension {
         switch (settings.provider) {
             case 'google':
                 url = `${settings.baseUrl}/models/${settings.model}:generateContent?key=${settings.apiKey}`;
+                
+                // Construir mensagens com system prompt
+                const messages = [];
+                
+                // Adicionar system prompt se MCP estiver conectado
+                if (this.settings.mcp.connected) {
+                    messages.push({
+                        parts: [{ text: this.getSystemPrompt() }]
+                    });
+                }
+                
+                // Adicionar mensagem do usuário
+                messages.push({
+                    parts: [{ text: message }]
+                });
+                
                 body = {
-                    contents: [{
-                        parts: [{ text: message }]
-                    }],
+                    contents: messages,
                     generationConfig: {
                         maxOutputTokens: settings.maxTokens,
                         temperature: settings.temperature
@@ -758,18 +772,16 @@ class MCPChatExtension {
         this.showTypingIndicator(true);
         
         try {
-            let contextMessage = message;
+            // Send message directly to LLM (com system prompt se MCP conectado)
+            console.log('🧠 Enviando mensagem para LLM...');
+            const response = await this.callLLM(message);
             
-            // If MCP is connected, check if we need to use tools
-            if (this.settings.mcp.connected && this.mcpConnection) {
-                contextMessage = await this.enhanceMessageWithMCP(message);
-            }
-            
-            // Send to LLM
-            const response = await this.callLLM(contextMessage);
+            // Process LLM response for tool calls
+            console.log('🔧 Processando resposta da LLM para chamadas de ferramentas...');
+            const finalResponse = await this.processLLMResponse(response);
             
             // Add AI response to chat
-            this.addMessage(response, 'ai');
+            this.addMessage(finalResponse, 'ai');
             
         } catch (error) {
             console.error('❌ Erro ao enviar mensagem:', error);
@@ -927,16 +939,161 @@ class MCPChatExtension {
     }
 
     checkWelcomeMessage() {
-        // Extensão vem pré-configurada com Google Gemini e Monday MCP
-        // Sempre esconder mensagem de boas-vindas e mostrar chat
+        // Interface simplificada: sempre mostrar chat direto
         const welcomeElement = document.getElementById('welcomeMessage');
         const messagesContainer = document.getElementById('messagesContainer');
-        
+
         if (welcomeElement && messagesContainer) {
+            // Sempre esconder boas-vindas e mostrar chat
             welcomeElement.style.display = 'none';
             messagesContainer.style.display = 'flex';
+            
+            console.log('💬 Interface de chat ativa');
         } else {
-            console.warn('⚠️ Elementos de boas-vindas não encontrados');
+            console.warn('⚠️ Elementos de interface não encontrados');
         }
+    }
+
+    // ===== SYSTEM PROMPT PARA LLM COM FERRAMENTAS MONDAY =====
+    getSystemPrompt() {
+        return `Você é um assistente AI com acesso às ferramentas do Monday.com via MCP (Model Context Protocol).
+
+FERRAMENTAS DISPONÍVEIS DO MONDAY.COM:
+- get_boards: Lista todos os boards do Monday.com do usuário
+- get_board_items: Obtém todos os itens de um board específico (precisa do board_id)
+- create_item: Cria um novo item em um board (precisa de board_id e nome do item)
+- update_item: Atualiza um item existente (precisa de item_id e dados a atualizar)
+- get_users: Lista todos os usuários da conta Monday.com
+
+COMO USAR FERRAMENTAS:
+Quando precisar usar uma ferramenta, inclua na sua resposta:
+[TOOL:nome_da_ferramenta:parametros_json]
+
+EXEMPLOS:
+- Para listar boards: [TOOL:get_boards:{}]
+- Para itens de board: [TOOL:get_board_items:{"board_id":"123456789"}]
+- Para criar item: [TOOL:create_item:{"board_id":"123456789","name":"Novo Item"}]
+- Para listar usuários: [TOOL:get_users:{}]
+
+INSTRUÇÕES:
+- Quando o usuário pedir informações do Monday.com, use as ferramentas apropriadas
+- Sempre explique o que você está fazendo
+- Use [TOOL:] antes de qualquer explicação dos resultados
+- Se não tiver certeza de qual board usar, liste todos primeiro
+
+Responda em português brasileiro e seja útil e direto.`;
+    }
+
+    // ===== PROCESSAMENTO DE FERRAMENTAS MCP =====
+    async processLLMResponse(response) {
+        // Detectar chamadas de ferramentas no formato [TOOL:nome:parametros]
+        const toolPattern = /\[TOOL:([^:]+):([^\]]+)\]/g;
+        let processedResponse = response;
+        let match;
+        
+        const toolCalls = [];
+        
+        // Encontrar todas as chamadas de ferramentas
+        while ((match = toolPattern.exec(response)) !== null) {
+            const toolName = match[1];
+            const toolParams = match[2];
+            
+            try {
+                const params = JSON.parse(toolParams);
+                toolCalls.push({
+                    name: toolName,
+                    params: params,
+                    originalMatch: match[0]
+                });
+            } catch (error) {
+                console.error('❌ Erro ao parsear parâmetros da ferramenta:', toolParams, error);
+            }
+        }
+        
+        // Executar ferramentas se encontradas
+        if (toolCalls.length > 0 && this.settings.mcp.connected) {
+            console.log('🔧 Executando', toolCalls.length, 'ferramenta(s) MCP...');
+            
+            for (const toolCall of toolCalls) {
+                try {
+                    console.log('🔧 Executando ferramenta:', toolCall.name, toolCall.params);
+                    
+                    // Chamar ferramenta via MCP
+                    const toolResult = await this.callMCPTool(toolCall.name, toolCall.params);
+                    
+                    // Substituir chamada de ferramenta pelo resultado
+                    const resultText = `[RESULTADO: ${JSON.stringify(toolResult)}]`;
+                    processedResponse = processedResponse.replace(toolCall.originalMatch, resultText);
+                    
+                    console.log('✅ Ferramenta executada com sucesso:', toolCall.name);
+                    
+                } catch (error) {
+                    console.error('❌ Erro ao executar ferramenta:', toolCall.name, error);
+                    const errorText = `[ERRO: ${error.message}]`;
+                    processedResponse = processedResponse.replace(toolCall.originalMatch, errorText);
+                }
+            }
+            
+            // Se houve chamadas de ferramentas, enviar resposta processada de volta para LLM
+            if (toolCalls.length > 0) {
+                console.log('🔄 Enviando resultados de volta para LLM...');
+                const finalResponse = await this.callLLM(
+                    `Contexto anterior: ${response}\n\nResultados das ferramentas: ${processedResponse}\n\nPor favor, processe estes resultados e forneça uma resposta clara ao usuário em português.`
+                );
+                return finalResponse;
+            }
+        }
+        
+        return processedResponse;
+    }
+    
+    // Chamar ferramenta específica via MCP
+    async callMCPTool(toolName, parameters) {
+        return new Promise((resolve, reject) => {
+            if (!this.settings.mcp.connected || !this.mcpConnection) {
+                reject(new Error('MCP não está conectado'));
+                return;
+            }
+            
+            const requestId = Date.now().toString();
+            
+            // Enviar solicitação de ferramenta para MCP
+            const toolRequest = {
+                type: 'call_tool',
+                id: requestId,
+                tool_name: toolName,
+                parameters: parameters
+            };
+            
+            console.log('📤 Enviando para MCP:', toolRequest);
+            this.mcpConnection.send(JSON.stringify(toolRequest));
+            
+            // Aguardar resposta (timeout de 30s)
+            const timeout = setTimeout(() => {
+                reject(new Error(`Timeout na execução da ferramenta ${toolName}`));
+            }, 30000);
+            
+            // Handler temporário para resposta da ferramenta
+            const responseHandler = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    
+                    if (message.type === 'tool_response' && message.id === requestId) {
+                        clearTimeout(timeout);
+                        this.mcpConnection.removeEventListener('message', responseHandler);
+                        
+                        if (message.success) {
+                            resolve(message.result);
+                        } else {
+                            reject(new Error(message.error || 'Erro na execução da ferramenta'));
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Erro ao processar resposta MCP:', error);
+                }
+            };
+            
+            this.mcpConnection.addEventListener('message', responseHandler);
+        });
     }
 }

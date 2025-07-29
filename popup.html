@@ -28,13 +28,13 @@
 
         <!-- Status Bar -->
         <div class="status-bar" id="statusBar">
-            <div class="status-item">
+            <div class="status-item" style="display: none;">
                 <span class="status-indicator" id="mcpStatus"></span>
                 <span class="status-text" id="mcpStatusText">MCP: Desconectado</span>
             </div>
             <div class="status-item">
                 <span class="status-indicator" id="llmStatus"></span>
-                <span class="status-text" id="llmStatusText">LLM: Não configurado</span>
+                <span class="status-text" id="llmStatusText">LLM: google</span>
             </div>
         </div>
 
@@ -49,7 +49,7 @@
                 
                 <div class="settings-content">
                     <!-- MCP Configuration -->
-                    <div class="config-section">
+                    <div class="config-section" style="display: none;">
                         <h4>📋 Monday.com MCP</h4>
                         <div class="form-group">
                             <label for="mcpUrl">URL do Servidor:</label>
@@ -155,15 +155,17 @@
                     <div class="message system-message">
                         <div class="message-content">
                             <div class="message-text">
-                                <h4>👋 Bem-vindo ao MCP Chat!</h4>
-                                <p>Configure suas conexões MCP e LLM nas configurações para começar a conversar.</p>
-                                <p><strong>Recursos disponíveis:</strong></p>
+                                <h4>🚀 Monday Chat AI</h4>
+                                <p>Olá! Sou sua assistente AI com acesso direto ao Monday.com.</p>
+                                <p><strong>Posso ajudar você com:</strong></p>
                                 <ul>
-                                    <li>🔗 Conexão com servidores MCP</li>
-                                    <li>🧠 Integração com múltiplos LLMs</li>
-                                    <li>⚡ Streaming de respostas em tempo real</li>
-                                    <li>🛠️ Acesso a ferramentas via MCP</li>
+                                    <li>📋 <strong>Listar seus boards</strong> - "Mostre meus boards"</li>
+                                    <li>📝 <strong>Ver itens de boards</strong> - "Quais itens tem no board X?"</li>
+                                    <li>➕ <strong>Criar novos itens</strong> - "Crie um item Y no board Z"</li>
+                                    <li>✏️ <strong>Atualizar itens</strong> - "Atualize o item X com status Y"</li>
+                                    <li>👥 <strong>Listar usuários</strong> - "Quem são os membros da equipe?"</li>
                                 </ul>
+                                <p>Digite sua pergunta abaixo e eu acessarei seus dados do Monday.com automaticamente! 💬</p>
                             </div>
                         </div>
                     </div>
