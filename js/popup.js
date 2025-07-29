@@ -589,23 +589,18 @@ class MCPChatExtension {
             case 'google':
                 url = `${settings.baseUrl}/models/${settings.model}:generateContent?key=${settings.apiKey}`;
                 
-                // Construir mensagens com system prompt
-                const messages = [];
+                // Para Gemini, combinar system prompt com mensagem do usuário
+                let fullMessage = message;
                 
                 // Adicionar system prompt se MCP estiver conectado
                 if (this.settings.mcp.connected) {
-                    messages.push({
-                        parts: [{ text: this.getSystemPrompt() }]
-                    });
+                    fullMessage = `${this.getSystemPrompt()}\n\n---\n\nUsuário: ${message}`;
                 }
                 
-                // Adicionar mensagem do usuário
-                messages.push({
-                    parts: [{ text: message }]
-                });
-                
                 body = {
-                    contents: messages,
+                    contents: [{
+                        parts: [{ text: fullMessage }]
+                    }],
                     generationConfig: {
                         maxOutputTokens: settings.maxTokens,
                         temperature: settings.temperature
