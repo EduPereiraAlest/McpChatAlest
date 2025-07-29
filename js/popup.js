@@ -135,53 +135,63 @@ class MCPChatExtension {
 
     // ===== EVENT LISTENERS =====
     setupEventListeners() {
-        // Botões principais
-        document.getElementById('settingsToggle').addEventListener('click', () => {
-            this.toggleSettings();
-        });
-        
-        document.getElementById('openSettingsFromWelcome').addEventListener('click', () => {
+        // Função helper para adicionar event listener com segurança
+        const safeAddEventListener = (elementId, event, handler) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.addEventListener(event, handler);
+            } else {
+                console.warn(`⚠️ Elemento não encontrado: ${elementId}`);
+            }
+        };
+
+        // Botão de configurações da mensagem de boas-vindas
+        safeAddEventListener('openSettingsFromWelcome', 'click', () => {
             this.toggleSettings();
         });
 
         // Settings panel
-        document.getElementById('settingsBtn').addEventListener('click', () => this.toggleSettings());
-        document.getElementById('closeSettingsBtn').addEventListener('click', () => this.toggleSettings(false));
+        safeAddEventListener('settingsBtn', 'click', () => this.toggleSettings());
+        safeAddEventListener('closeSettingsBtn', 'click', () => this.toggleSettings(false));
         
         // Settings form
-        document.getElementById('saveSettings').addEventListener('click', () => this.handleSaveSettings());
-        document.getElementById('resetSettings').addEventListener('click', () => this.handleResetSettings());
+        safeAddEventListener('saveSettings', 'click', () => this.handleSaveSettings());
+        safeAddEventListener('resetSettings', 'click', () => this.handleResetSettings());
         
         // Connection testing
-        document.getElementById('testMcpConnection').addEventListener('click', () => this.testMCPConnection());
-        document.getElementById('testLlmConnection').addEventListener('click', () => this.testLLMConnection());
+        safeAddEventListener('testMcpConnection', 'click', () => this.testMCPConnection());
+        safeAddEventListener('testLlmConnection', 'click', () => this.testLLMConnection());
         
-        // Temperature slider
-        document.getElementById('temperature').addEventListener('input', (e) => {
-            document.getElementById('temperatureValue').textContent = e.target.value;
+        // Settings inputs
+        safeAddEventListener('temperature', 'input', (e) => {
+            const valueElement = document.getElementById('temperatureValue');
+            if (valueElement) valueElement.textContent = e.target.value;
         });
         
-        // LLM provider change
-        document.getElementById('llmProvider').addEventListener('change', (e) => {
+        safeAddEventListener('llmProvider', 'change', (e) => {
             this.handleProviderChange(e.target.value);
         });
         
-        // Chat functionality
-        document.getElementById('sendBtn').addEventListener('click', () => this.sendMessage());
-        document.getElementById('messageInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                e.preventDefault();
-                this.sendMessage();
-            } else if (e.key === 'Enter' && !e.shiftKey) {
-                // Allow shift+enter for new lines
-                // Regular enter sends message only if not holding shift
-                e.preventDefault();
-                this.sendMessage();
-            }
-        });
+        // Chat interface
+        safeAddEventListener('sendBtn', 'click', () => this.sendMessage());
         
-        // Minimize button
-        document.getElementById('minimizeBtn').addEventListener('click', () => {
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (e.shiftKey) {
+                        // Allow new line with Shift+Enter
+                        return;
+                    } else {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                }
+            });
+        }
+        
+        // Window controls
+        safeAddEventListener('minimizeBtn', 'click', () => {
             window.close();
         });
     }
@@ -860,12 +870,16 @@ class MCPChatExtension {
         const welcomeElement = document.getElementById('welcomeMessage');
         const messagesContainer = document.getElementById('messagesContainer');
         
-        if (!hasLLMConfig) {
-            welcomeElement.style.display = 'block';
-            messagesContainer.style.display = 'none';
+        if (welcomeElement && messagesContainer) {
+            if (!hasLLMConfig) {
+                welcomeElement.style.display = 'block';
+                messagesContainer.style.display = 'none';
+            } else {
+                welcomeElement.style.display = 'none';
+                messagesContainer.style.display = 'flex';
+            }
         } else {
-            welcomeElement.style.display = 'none';
-            messagesContainer.style.display = 'flex';
+            console.warn('⚠️ Elementos de boas-vindas não encontrados');
         }
     }
 }
