@@ -1,232 +1,116 @@
-# 🚀 Guia de Início Rápido - Chrome MCP Chat
+# 🚀 Quick Start - Chrome MCP Chat
 
-Este guia vai te ajudar a instalar e testar a extensão em **menos de 5 minutos**!
+## ⚡ Instalação Rápida
 
-## ⚡ **Instalação Rápida**
+### 1. **Carregar a Extensão**
+1. Abra `chrome://extensions/`
+2. Ative **"Modo do desenvolvedor"**
+3. Clique **"Carregar extensão sem compactação"**
+4. Selecione a pasta `chrome-mcp-chat`
 
-### **1. Instalar a Extensão Chrome**
+### 2. **Primeira Configuração**
 
-```bash
-# 1. Clone o repositório
-git clone https://github.com/your-username/chrome-mcp-chat.git
-cd chrome-mcp-chat
+Ao abrir a extensão pela primeira vez, você verá uma **mensagem de boas-vindas** explicando os passos.
 
-# 2. Abra o Chrome e vá para: chrome://extensions/
+#### **🧠 Configurar LLM (OBRIGATÓRIO)**
+1. Clique no botão ⚙️ **"Abrir Configurações"**
+2. Na seção **"Modelo LLM"**, escolha seu provedor:
 
-# 3. Ative "Modo do desenvolvedor" (canto superior direito)
+**OpenAI:**
+- Provider: `OpenAI`
+- API Key: `sk-sua-api-key-aqui`
+- Modelo: `gpt-4` ou `gpt-3.5-turbo`
 
-# 4. Clique em "Carregar sem compactação" e selecione esta pasta
+**Anthropic:**
+- Provider: `Anthropic (Claude)`
+- API Key: `sk-ant-sua-api-key-aqui`
+- Modelo: `claude-3-sonnet-20240229`
 
-# 5. Pin a extensão na barra de ferramentas
-```
+**Local/Ollama:**
+- Provider: `Local/Ollama`
+- Base URL: `http://localhost:11434/v1`
+- Modelo: `llama2`, `codellama`, etc.
 
-### **2. Configurar um LLM (Escolha uma opção)**
+#### **🔗 Configurar MCP (OPCIONAL)**
 
-#### **🔥 Opção A: OpenAI (Recomendado)**
+⚠️ **IMPORTANTE**: O servidor MCP é **opcional**. A extensão funciona perfeitamente apenas com LLM.
 
-1. Obtenha sua API key em: https://platform.openai.com/api-keys
-2. Clique na extensão → ⚙️ Configurações
-3. Configure:
-   - **Provider:** OpenAI
-   - **API Key:** sua-api-key-aqui
-   - **Model:** gpt-4
+Se você quiser testar o MCP, siga estes passos:
 
-#### **🧠 Opção B: Anthropic (Claude)**
+1. **Instalar Node.js** (se não tiver)
+2. **Executar o servidor de exemplo**:
+   ```bash
+   cd chrome-mcp-chat
+   npm install
+   npm run dev
+   ```
+3. **Configurar na extensão**:
+   - URL do Servidor: `ws://localhost:8080/mcp`
+   - API Key: deixe vazio (opcional)
 
-1. Obtenha sua API key em: https://console.anthropic.com/
-2. Configure:
-   - **Provider:** Anthropic
-   - **API Key:** sua-api-key-aqui
-   - **Model:** claude-3-sonnet-20240229
-
-#### **💻 Opção C: Local (Ollama)**
-
-1. Instale Ollama: https://ollama.ai/
-2. Execute: `ollama run llama2`
-3. Configure:
-   - **Provider:** Local
-   - **Base URL:** http://localhost:11434/v1
-   - **Model:** llama2
-
-### **3. Teste Básico**
-
-1. Clique na extensão 🤖
-2. Digite: "Olá! Como você funciona?"
-3. Pressione Enter e veja a resposta!
-
----
-
-## 🛠️ **Testando com Servidor MCP (Opcional)**
-
-Para testar as funcionalidades MCP completas:
-
-### **1. Instalar Dependências**
-
-```bash
-npm install
-```
-
-### **2. Executar Servidor MCP**
-
-```bash
-npm start
-```
-
-Você verá:
-
-```
-🚀 Iniciando Servidor MCP...
-📡 Servidor MCP rodando na porta 8080
-✅ Servidor MCP inicializado com sucesso!
-
-📋 Ferramentas disponíveis:
-  • calculator: Executa cálculos matemáticos básicos
-  • file_info: Obtém informações sobre arquivos no servidor
-  • list_files: Lista arquivos no diretório atual
-  • generate_uuid: Gera um UUID único
-  • server_status: Obtém status e estatísticas do servidor MCP
-
-🎯 Pronto para conexões!
-```
-
-### **3. Configurar MCP na Extensão**
-
-1. Extensão → ⚙️ Configurações
-2. **Servidor MCP:**
-   - **URL:** `ws://localhost:8080`
-   - **API Key:** `demo-key-123` (opcional)
-3. Clique "Testar Conexão"
-4. Salvar configurações
-
-### **4. Testar Ferramentas MCP**
-
-Agora você pode usar comandos como:
-
-- 💻 "calcule 15 \* 23"
-- 📁 "liste os arquivos aqui"
-- 🆔 "gere um UUID"
-- 📊 "qual o status do servidor?"
+### 3. **Salvar e Testar**
+1. Clique **"Salvar Configurações"**
+2. A mensagem de boas-vindas desaparece
+3. Digite uma mensagem no chat
+4. Sucesso! 🎉
 
 ---
 
-## 🎯 **Recursos Testáveis**
+## 🎯 Usando a Extensão
 
-### **💬 Chat Básico**
+### **💬 Chat Principal**
+- Clique no ícone da extensão
+- Digite sua pergunta
+- Pressione Enter ou clique "Enviar"
 
-- ✅ Conversas com IA
-- ✅ Streaming de respostas
-- ✅ Histórico de mensagens
-- ✅ Markdown básico
+### **🖱️ Context Menu**
+1. Selecione qualquer texto em uma página
+2. Clique com botão direito
+3. Escolha:
+   - **"Analisar com MCP Chat"**
+   - **"Explicar com MCP Chat"**
 
-### **🌐 Integração com Páginas**
-
-- ✅ Selecione texto → Botão direito → "Analisar com MCP Chat"
-- ✅ Atalhos: `Ctrl+Shift+M` (abrir chat)
-- ✅ Context menus para texto selecionado
-
-### **🛠️ Ferramentas MCP**
-
-- ✅ Calculadora inteligente
-- ✅ Sistema de arquivos
-- ✅ Geração de UUIDs
-- ✅ Status do servidor
-- ✅ Enhancement de mensagens
-
-### **⚙️ Configurações**
-
-- ✅ Multi-provider LLM
-- ✅ Configurações avançadas (temperatura, tokens)
-- ✅ Persistência de settings
-- ✅ Teste de conexões
+### **🔧 Ferramentas MCP (se configurado)**
+- `calculator` - Calculadora
+- `file_info` - Informações de arquivo
+- `list_files` - Listar arquivos
+- `generate_uuid` - Gerar UUID
+- `server_status` - Status do servidor
 
 ---
 
-## 🐛 **Problemas Comuns**
+## 🚨 Resolução de Problemas
 
-### **❌ "API Key inválida"**
+### **❌ "LLM: Não configurado"**
+- Verifique se adicionou uma API key válida
+- Teste a conexão com "Testar LLM"
 
-```
-Solução: Verifique se a API key está correta e tem créditos
-```
+### **⚠️ "Servidor MCP offline"**
+- **É normal!** MCP é opcional
+- Se quiser usar: execute `npm run dev`
+- Se não: ignore, a extensão funciona sem MCP
 
-### **❌ "Conexão MCP falhou"**
-
-```
-Solução:
-1. Verifique se o servidor está rodando (npm start)
-2. Confirme a URL: ws://localhost:8080
-3. Teste a conexão nas configurações
-```
-
-### **❌ "Extensão não aparece"**
-
-```
-Solução:
-1. Vá em chrome://extensions/
-2. Verifique se está ativada
-3. Pin na barra de ferramentas
-```
-
-### **❌ "Streaming não funciona"**
-
-```
-Solução: Desative e reative "Streaming" nas configurações avançadas
-```
+### **🔄 Recarregar Extensão**
+1. Vá em `chrome://extensions/`
+2. Clique no botão 🔄 da extensão
+3. Reabra o popup
 
 ---
 
-## 🔧 **Desenvolvimento**
+## 📋 Checklist Rápido
 
-### **Estrutura dos Arquivos**
+- [ ] ✅ Extensão carregada no Chrome
+- [ ] 🧠 LLM configurado (OpenAI/Anthropic/Local)
+- [ ] 💾 Configurações salvas
+- [ ] 💬 Teste de chat funcionando
+- [ ] 🖱️ Context menu funcionando
+- [ ] 🔗 MCP configurado (opcional)
 
-```
-chrome-mcp-chat/
-├── manifest.json       # ⚙️ Configuração da extensão
-├── popup.html          # 🎨 Interface principal
-├── popup.js            # 🧠 Lógica do chat
-├── background.js       # 🔧 Service worker
-├── content.js          # 🌐 Integração com páginas
-├── styles/popup.css    # 💅 Estilos modernos
-├── icons/*.svg         # 🎯 Ícones da extensão
-├── mcp-server-example.js # 🛠️ Servidor MCP de teste
-└── convert-icons.html  # 🎨 Conversor SVG→PNG
-```
-
-### **Debugging**
-
-```bash
-# Console da extensão
-chrome://extensions/ → Detalhes → Inspecionar visões → Service Worker
-
-# Console do popup
-Clique na extensão → F12
-
-# Console do content script
-F12 na página web → Console
-```
+**Pronto! Sua extensão está funcionando! 🚀**
 
 ---
 
-## 🎉 **Próximos Passos**
+## 🆘 Ajuda
 
-1. **🔧 Personalize** as configurações para seu uso
-2. **🛠️ Explore** as ferramentas MCP disponíveis
-3. **🧪 Experimente** com diferentes LLMs
-4. **📚 Leia** a documentação completa no README.md
-5. **💡 Contribua** com melhorias no GitHub
-
----
-
-## 💡 **Dicas Pro**
-
-- 🎯 Use `Ctrl+Shift+M` para acesso rápido
-- 📝 Selecione texto em qualquer site para análise contextual
-- ⚡ Configure streaming para respostas mais rápidas
-- 🔧 Experimente diferentes temperaturas para criatividade
-- 💾 Suas configurações são salvas automaticamente
-
----
-
-**🚀 Pronto! Sua extensão Chrome MCP Chat está funcionando!**
-
-_Em caso de dúvidas, consulte o README.md completo ou abra uma issue no GitHub._
+- **GitHub Issues**: https://github.com/EduPereiraAlest/McpChatAlest/issues
+- **Email**: eduardo.pereira@alest.com.br
