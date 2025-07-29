@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Converter Ícones SVG para PNG</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+        
+        .converter {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 10px 10px 0;
+        }
+        
+        button:hover {
+            background: #005a9e;
+        }
+        
+        .preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .icon-preview {
+            text-align: center;
+            background: #3a3a3a;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        
+        .icon-preview canvas {
+            border: 1px solid #404040;
+            background: white;
+        }
+        
+        .download-links {
+            margin-top: 20px;
+        }
+        
+        .download-links a {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin: 5px;
+        }
+        
+        .instructions {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Conversor de Ícones SVG → PNG</h1>
+    
+    <div class="instructions">
+        <h3>📋 Instruções:</h3>
+        <ol>
+            <li>Clique em "Gerar Todos os Ícones" para converter automaticamente os SVGs</li>
+            <li>Os ícones PNG aparecerão abaixo para preview</li>
+            <li>Clique nos links de download para salvar cada ícone</li>
+            <li>Substitua os arquivos SVG no manifest.json pelos PNG gerados</li>
+        </ol>
+    </div>
+    
+    <div class="converter">
+        <h3>🔧 Gerador de Ícones</h3>
+        <button onclick="generateAllIcons()">🚀 Gerar Todos os Ícones</button>
+        <button onclick="clearAll()">🗑️ Limpar</button>
+    </div>
+    
+    <div class="preview" id="preview"></div>
+    <div class="download-links" id="downloadLinks"></div>
+
+    <script>
+        // SVG content (same as icon-16.svg)
+        const svgContent = `
+            <svg width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#007acc;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#005a9e;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Background circle -->
+                <circle cx="8" cy="8" r="8" fill="url(#gradient)"/>
+                
+                <!-- Robot head -->
+                <rect x="4" y="4" width="8" height="6" rx="1" fill="white"/>
+                
+                <!-- Eyes -->
+                <circle cx="6" cy="6.5" r="0.8" fill="#007acc"/>
+                <circle cx="10" cy="6.5" r="0.8" fill="#007acc"/>
+                
+                <!-- Mouth -->
+                <rect x="6.5" y="8.5" width="3" height="0.8" rx="0.4" fill="#007acc"/>
+                
+                <!-- Antenna -->
+                <line x1="8" y1="4" x2="8" y2="2.5" stroke="white" stroke-width="0.8"/>
+                <circle cx="8" cy="2.5" r="0.5" fill="white"/>
+            </svg>
+        `;
+
+        const sizes = [16, 32, 48, 128];
+
+        function generateAllIcons() {
+            const preview = document.getElementById('preview');
+            const downloadLinks = document.getElementById('downloadLinks');
+            
+            preview.innerHTML = '';
+            downloadLinks.innerHTML = '<h3>📥 Downloads:</h3>';
+
+            sizes.forEach(size => {
+                generateIcon(size);
+            });
+        }
+
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = size;
+            canvas.height = size;
+
+            // Create SVG with proper size
+            const scaledSvg = svgContent.replace('width="128" height="128"', `width="${size}" height="${size}"`);
+            
+            const img = new Image();
+            const svgBlob = new Blob([scaledSvg], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, size, size);
+                URL.revokeObjectURL(url);
+
+                // Add to preview
+                const preview = document.getElementById('preview');
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'icon-preview';
+                iconDiv.innerHTML = `
+                    <div><strong>${size}x${size}</strong></div>
+                    ${canvas.outerHTML}
+                `;
+                preview.appendChild(iconDiv);
+
+                // Add download link
+                canvas.toBlob(function(blob) {
+                    const downloadUrl = URL.createObjectURL(blob);
+                    const downloadLinks = document.getElementById('downloadLinks');
+                    
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.download = `icon-${size}.png`;
+                    link.textContent = `📁 icon-${size}.png`;
+                    
+                    downloadLinks.appendChild(link);
+                });
+            };
+
+            img.src = url;
+        }
+
+        function clearAll() {
+            document.getElementById('preview').innerHTML = '';
+            document.getElementById('downloadLinks').innerHTML = '';
+        }
+
+        // Auto-generate on load
+        window.addEventListener('load', function() {
+            setTimeout(generateAllIcons, 500);
+        });
+    </script>
+</body>
+</html>

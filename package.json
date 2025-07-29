@@ -1,0 +1,38 @@
+{
+  "name": "chrome-mcp-chat-server",
+  "version": "1.0.0",
+  "description": "Servidor MCP de exemplo para Chrome MCP Chat Extension",
+  "main": "mcp-server-example.js",
+  "scripts": {
+    "start": "node mcp-server-example.js",
+    "dev": "nodemon mcp-server-example.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "websocket",
+    "ai",
+    "chat",
+    "chrome-extension"
+  ],
+  "author": "Chrome MCP Chat Extension",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/chrome-mcp-chat"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/chrome-mcp-chat/issues"
+  },
+  "homepage": "https://github.com/your-username/chrome-mcp-chat#readme"
+}

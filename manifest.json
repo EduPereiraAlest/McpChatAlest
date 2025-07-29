@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Chrome MCP Chat",
+  "version": "1.0.0",
+  "description": "AI Chat Assistant with MCP integration - Connect to MCP servers and LLMs directly from your browser",
+  "author": "Eduardo Pereira",
+  
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "contextMenus",
+    "notifications",
+    "alarms"
+  ],
+  
+  "host_permissions": [
+    "http://localhost/*",
+    "https://*/*"
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "MCP Chat",
+    "default_icon": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg",
+      "48": "icons/icon-48.svg",
+      "128": "icons/icon-128.svg"
+    }
+  },
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  
+  "icons": {
+    "16": "icons/icon-16.svg",
+    "32": "icons/icon-32.svg",
+    "48": "icons/icon-48.svg",
+    "128": "icons/icon-128.svg"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["chat-window.html", "styles/*", "js/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

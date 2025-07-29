@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Chat Assistant</title>
+    <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">🤖</span>
+                    <span class="logo-text">MCP Chat</span>
+                </div>
+                <div class="header-actions">
+                    <button id="settingsBtn" class="icon-btn" title="Configurações">
+                        <span>⚙️</span>
+                    </button>
+                    <button id="minimizeBtn" class="icon-btn" title="Minimizar">
+                        <span>➖</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Status Bar -->
+        <div class="status-bar" id="statusBar">
+            <div class="status-item">
+                <span class="status-indicator" id="mcpStatus"></span>
+                <span class="status-text" id="mcpStatusText">MCP: Desconectado</span>
+            </div>
+            <div class="status-item">
+                <span class="status-indicator" id="llmStatus"></span>
+                <span class="status-text" id="llmStatusText">LLM: Não configurado</span>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Settings Panel -->
+            <div id="settingsPanel" class="settings-panel hidden">
+                <div class="settings-header">
+                    <h3>Configurações</h3>
+                    <button id="closeSettingsBtn" class="icon-btn">❌</button>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- MCP Configuration -->
+                    <div class="config-section">
+                        <h4>🔗 Servidor MCP</h4>
+                        <div class="form-group">
+                            <label for="mcpUrl">URL do Servidor:</label>
+                            <input type="url" id="mcpUrl" placeholder="ws://localhost:8080/mcp" />
+                        </div>
+                        <div class="form-group">
+                            <label for="mcpApiKey">API Key (opcional):</label>
+                            <input type="password" id="mcpApiKey" placeholder="Sua API key..." />
+                        </div>
+                        <button id="testMcpConnection" class="btn btn-secondary">Testar Conexão</button>
+                    </div>
+
+                    <!-- LLM Configuration -->
+                    <div class="config-section">
+                        <h4>🧠 Modelo LLM</h4>
+                        <div class="form-group">
+                            <label for="llmProvider">Provedor:</label>
+                            <select id="llmProvider">
+                                <option value="openai">OpenAI</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="local">Local/Ollama</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="llmApiKey">API Key:</label>
+                            <input type="password" id="llmApiKey" placeholder="Sua API key..." />
+                        </div>
+                        <div class="form-group">
+                            <label for="llmModel">Modelo:</label>
+                            <input type="text" id="llmModel" placeholder="gpt-4, claude-3-sonnet, etc." />
+                        </div>
+                        <div class="form-group">
+                            <label for="llmBaseUrl">Base URL (para custom/local):</label>
+                            <input type="url" id="llmBaseUrl" placeholder="http://localhost:11434/v1" />
+                        </div>
+                        <button id="testLlmConnection" class="btn btn-secondary">Testar LLM</button>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="config-section">
+                        <h4>⚡ Avançado</h4>
+                        <div class="form-group">
+                            <label for="maxTokens">Max Tokens:</label>
+                            <input type="number" id="maxTokens" value="4000" min="100" max="100000" />
+                        </div>
+                        <div class="form-group">
+                            <label for="temperature">Temperatura:</label>
+                            <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" />
+                            <span id="temperatureValue">0.7</span>
+                        </div>
+                        <div class="form-group checkbox-group">
+                            <input type="checkbox" id="streamingEnabled" checked />
+                            <label for="streamingEnabled">Habilitar Streaming</label>
+                        </div>
+                    </div>
+
+                    <div class="settings-actions">
+                        <button id="saveSettings" class="btn btn-primary">Salvar Configurações</button>
+                        <button id="resetSettings" class="btn btn-danger">Resetar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div id="chatInterface" class="chat-interface">
+                <!-- Messages Container -->
+                <div class="messages-container" id="messagesContainer">
+                    <!-- Welcome Message -->
+                    <div class="message system-message">
+                        <div class="message-content">
+                            <div class="message-text">
+                                <h4>👋 Bem-vindo ao MCP Chat!</h4>
+                                <p>Configure suas conexões MCP e LLM nas configurações para começar a conversar.</p>
+                                <p><strong>Recursos disponíveis:</strong></p>
+                                <ul>
+                                    <li>🔗 Conexão com servidores MCP</li>
+                                    <li>🧠 Integração com múltiplos LLMs</li>
+                                    <li>⚡ Streaming de respostas em tempo real</li>
+                                    <li>🛠️ Acesso a ferramentas via MCP</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea 
+                            id="messageInput" 
+                            placeholder="Digite sua mensagem... (Shift+Enter para nova linha)"
+                            rows="1"
+                            disabled
+                        ></textarea>
+                        <button id="sendBtn" class="send-btn" disabled title="Enviar (Ctrl+Enter)">
+                            <span>🚀</span>
+                        </button>
+                    </div>
+                    <div class="input-footer">
+                        <div class="typing-indicator hidden" id="typingIndicator">
+                            <span>AI está digitando</span>
+                            <div class="dots">
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                                <div class="dot"></div>
+                            </div>
+                        </div>
+                        <div class="connection-status" id="connectionStatus">
+                            Configure as conexões para começar
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Conectando...</div>
+        </div>
+    </div>
+
+    <script src="js/popup.js"></script>
+</body>
+</html>
