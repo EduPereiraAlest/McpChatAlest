@@ -85,6 +85,18 @@ class MCPChatExtension {
         // Atualizar status inicial
         this.updateConnectionStatus();
         
+        // 🔗 CONECTAR AUTOMATICAMENTE AO MCP SE CONFIGURADO
+        if (this.settings.mcp.url && this.settings.mcp.autoReconnect) {
+            console.log('🔄 Conectando automaticamente ao MCP...');
+            try {
+                await this.connectToMCP();
+                console.log('✅ MCP conectado automaticamente');
+            } catch (error) {
+                console.warn('⚠️ Falha na conexão automática ao MCP:', error.message);
+                // Não mostrar erro - usuário pode conectar manualmente
+            }
+        }
+        
         console.log('✅ Extensão inicializada com sucesso');
     }
 

@@ -2,11 +2,12 @@
   "name": "chrome-mcp-chat",
   "version": "1.0.0",
   "description": "Chrome extension for AI chat with MCP integration - Monday API focused",
-  "main": "monday-mcp-server.js",
+  "main": "monday-mcp-bridge.js",
   "scripts": {
-    "start": "node monday-mcp-server.js",
-    "dev": "nodemon monday-mcp-server.js",
-    "monday": "node monday-mcp-server.js",
+    "start": "node monday-mcp-bridge.js",
+    "dev": "nodemon monday-mcp-bridge.js",
+    "monday": "node monday-mcp-bridge.js",
+    "bridge": "node monday-mcp-bridge.js",
     "install-monday": "npm install @mondaydotcomorg/monday-api-mcp",
     "test": "echo \"No tests specified\" && exit 0"
   },
@@ -16,7 +17,8 @@
     "monday.com",
     "ai-chat",
     "google-gemini",
-    "websocket"
+    "websocket",
+    "bridge"
   ],
   "author": "Eduardo Pereira <eduardo.pereira@alest.com.br>",
   "license": "MIT",
