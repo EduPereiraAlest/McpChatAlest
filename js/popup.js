@@ -50,13 +50,13 @@ class MCPChatExtension {
                 }
             },
             llm: {
-                provider: 'google', // Usar Google Gemini
+                provider: 'google',
                 apiKey: 'AIzaSyBKdGouQzBbm6Dwm5pyPhDt2MCUpDPGAig',
                 model: 'gemini-1.5-flash',
                 baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-                maxTokens: 8192, // Gemini 1.5 Flash suporta mais tokens
+                maxTokens: 8192,
                 temperature: 0.7,
-                streaming: true
+                streaming: false // Desabilitar streaming para debug
             }
         };
         
@@ -576,7 +576,6 @@ class MCPChatExtension {
 
     async callLLM(message, customSettings = null) {
         console.log('📞 INICIO callLLM - Mensagem:', message?.substring(0, 100) + '...');
-        
         const settings = customSettings || this.settings.llm;
         console.log('⚙️ Settings sendo usados:', {
             provider: settings.provider,
@@ -584,30 +583,23 @@ class MCPChatExtension {
             baseUrl: settings.baseUrl,
             hasApiKey: !!settings.apiKey
         });
-        
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        
+
+        const headers = { 'Content-Type': 'application/json' };
         let url = '';
         let body = {};
-        
+
         console.log('🔧 Configurando request para provider:', settings.provider);
-        
-        // Configure request based on provider
+
         switch (settings.provider) {
             case 'google':
                 url = `${settings.baseUrl}/models/${settings.model}:generateContent?key=${settings.apiKey}`;
                 console.log('🌐 URL Google Gemini:', url.replace(settings.apiKey, '***'));
                 
-                // Para Gemini, sempre incluir system prompt Monday.com
                 const fullMessage = `${this.getSystemPrompt()}\n\n---\n\nUsuário: ${message}`;
                 console.log('📝 Mensagem completa (primeiros 200 chars):', fullMessage.substring(0, 200) + '...');
                 
                 body = {
-                    contents: [{
-                        parts: [{ text: fullMessage }]
-                    }],
+                    contents: [{ parts: [{ text: fullMessage }] }],
                     generationConfig: {
                         maxOutputTokens: settings.maxTokens,
                         temperature: settings.temperature
@@ -619,84 +611,100 @@ class MCPChatExtension {
                     temperature: body.generationConfig.temperature
                 });
                 break;
-                
+
             case 'openai':
-                url = 'https://api.openai.com/v1/chat/completions';
+                url = `${settings.baseUrl}/chat/completions`;
                 headers['Authorization'] = `Bearer ${settings.apiKey}`;
                 body = {
                     model: settings.model,
-                    messages: [{ role: 'user', content: message }],
+                    messages: [
+                        { role: 'system', content: this.getSystemPrompt() },
+                        { role: 'user', content: message }
+                    ],
                     max_tokens: settings.maxTokens,
                     temperature: settings.temperature,
                     stream: settings.streaming
                 };
                 break;
-                
+
             case 'anthropic':
-                url = 'https://api.anthropic.com/v1/messages';
+                url = `${settings.baseUrl}/messages`;
                 headers['x-api-key'] = settings.apiKey;
                 headers['anthropic-version'] = '2023-06-01';
                 body = {
                     model: settings.model,
-                    messages: [{ role: 'user', content: message }],
                     max_tokens: settings.maxTokens,
                     temperature: settings.temperature,
-                    stream: settings.streaming
+                    system: this.getSystemPrompt(),
+                    messages: [{ role: 'user', content: message }]
                 };
                 break;
-                
-            case 'local':
-            case 'custom':
-                url = `${settings.baseUrl}/chat/completions`;
-                if (settings.apiKey) {
-                    headers['Authorization'] = `Bearer ${settings.apiKey}`;
-                }
-                body = {
-                    model: settings.model,
-                    messages: [{ role: 'user', content: message }],
-                    max_tokens: settings.maxTokens,
-                    temperature: settings.temperature,
-                    stream: settings.streaming
-                };
-                break;
-                
+
             default:
-                throw new Error(`Provedor não suportado: ${settings.provider}`);
+                throw new Error(`Provider ${settings.provider} não suportado`);
         }
-        
+
         console.log('🧠 Enviando para LLM:', { provider: settings.provider, model: settings.model, message: message.substring(0, 100) + '...' });
-        
         console.log('🌐 Iniciando fetch para URL:', url.includes('key=') ? url.replace(/key=[^&]+/, 'key=***') : url);
         console.log('📡 Headers:', headers);
         console.log('📦 Body (JSON):', JSON.stringify(body).substring(0, 300) + '...');
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body)
-        });
-        
-        console.log('✅ Fetch completado! Status:', response.status, 'OK:', response.ok);
-        console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Response error text:', errorText);
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        console.log('🔄 Processando resposta... Streaming:', settings.streaming);
-        
-        if (settings.streaming) {
-            console.log('📺 Iniciando streaming response...');
-            return this.handleStreamingResponse(response);
-        } else {
-            console.log('📄 Processando resposta JSON...');
-            const data = await response.json();
-            console.log('📊 Data recebida:', JSON.stringify(data).substring(0, 300) + '...');
-            const extractedMessage = this.extractMessageFromResponse(data, settings.provider);
-            console.log('✉️ Mensagem extraída:', extractedMessage?.substring(0, 200) + '...');
-            return extractedMessage;
+
+        try {
+            // 🚨 ADICIONAR TIMEOUT DE 30 SEGUNDOS
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                console.log('⏰ TIMEOUT! Abortando requisição após 30s');
+                controller.abort();
+            }, 30000);
+
+            console.log('🚀 Fazendo fetch com timeout de 30s...');
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(body),
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            console.log('✅ Fetch completado! Status:', response.status, 'OK:', response.ok);
+            console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()));
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Response error text:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
+            }
+
+            console.log('🔄 Processando resposta... Streaming:', settings.streaming);
+
+            if (settings.streaming) {
+                console.log('📺 Iniciando streaming response...');
+                return this.handleStreamingResponse(response);
+            } else {
+                console.log('📄 Processando resposta JSON...');
+                const data = await response.json();
+                console.log('📊 Data recebida:', JSON.stringify(data).substring(0, 300) + '...');
+                const extractedMessage = this.extractMessageFromResponse(data, settings.provider);
+                console.log('✉️ Mensagem extraída:', extractedMessage?.substring(0, 200) + '...');
+                return extractedMessage;
+            }
+
+        } catch (error) {
+            console.error('❌ ERRO DETALHADO na requisição:', error);
+            
+            if (error.name === 'AbortError') {
+                throw new Error('⏰ Timeout: A API demorou mais de 30 segundos para responder');
+            }
+            
+            if (error.message.includes('Failed to fetch')) {
+                throw new Error('🌐 Erro de conexão: Verifique sua internet e tente novamente');
+            }
+            
+            if (error.message.includes('400')) {
+                throw new Error('🔑 Erro de API: Verifique se a API key do Google Gemini está correta');
+            }
+            
+            throw error;
         }
     }
 
