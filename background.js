@@ -30,18 +30,22 @@ chrome.runtime.onInstalled.addListener((details) => {
 });
 
 chrome.runtime.onStartup.addListener(() => {
-    console.log('🔄 Chrome iniciado - restaurando conexões MCP');
-    restoreMCPConnections();
+    console.log('🔄 Chrome iniciado - extensão MCP Chat ativa');
+    // Remover conexão automática - só conectar quando usuário configurar
+    // restoreMCPConnections(); <- REMOVIDO
+    if (chrome.contextMenus) {
+        setupContextMenus();
+    }
 });
 
 // ===== SETTINGS MANAGEMENT =====
 async function setDefaultSettings() {
     const defaultSettings = {
         mcp: {
-            url: 'ws://localhost:8080/mcp',
+            url: '', // Remover URL padrão para evitar conexão automática
             apiKey: '',
             connected: false,
-            autoReconnect: true
+            autoReconnect: false // Desabilitar auto-reconexão por padrão
         },
         llm: {
             provider: 'openai',
@@ -81,24 +85,48 @@ async function loadSettings() {
 
 // ===== MCP CONNECTION MANAGEMENT =====
 async function restoreMCPConnections() {
-    const settings = await loadSettings();
-    
-    if (settings.mcp?.url && settings.mcp?.autoReconnect) {
-        try {
-            await createMCPConnection(settings.mcp.url, settings.mcp.apiKey);
-            console.log('🔗 Conexão MCP restaurada');
-        } catch (error) {
-            console.error('❌ Erro ao restaurar conexão MCP:', error);
+    try {
+        const settings = await loadSettings();
+        
+        // Só tenta conectar se tiver URL configurada E autoReconnect ativo
+        if (!settings.mcp?.url) {
+            console.log('ℹ️ Nenhum servidor MCP configurado');
+            return;
         }
+        
+        if (!settings.mcp?.autoReconnect) {
+            console.log('ℹ️ Auto-reconexão MCP desabilitada');
+            return;
+        }
+        
+        console.log('🔗 Tentando reconectar ao MCP:', settings.mcp.url);
+        await createMCPConnection(settings.mcp.url, settings.mcp.apiKey);
+        console.log('✅ Conexão MCP restaurada com sucesso');
+        
+    } catch (error) {
+        console.log('ℹ️ Não foi possível restaurar conexão MCP:', error.message);
+        // Não mostrar como erro - é normal não conseguir conectar
     }
 }
 
 async function createMCPConnection(url, apiKey = '') {
     return new Promise((resolve, reject) => {
+        if (!url) {
+            reject(new Error('URL do servidor MCP não configurada'));
+            return;
+        }
+        
         const ws = new WebSocket(url);
         const connectionId = Date.now().toString();
         
+        // Timeout para conexão
+        const connectionTimeout = setTimeout(() => {
+            ws.close();
+            reject(new Error(`Timeout na conexão com ${url}`));
+        }, 5000);
+        
         ws.onopen = () => {
+            clearTimeout(connectionTimeout);
             console.log('🔗 Conexão MCP estabelecida:', url);
             
             extensionState.mcpConnections.set(connectionId, {
@@ -120,11 +148,13 @@ async function createMCPConnection(url, apiKey = '') {
         };
         
         ws.onerror = (error) => {
-            console.error('❌ Erro na conexão MCP:', error);
-            reject(error);
+            clearTimeout(connectionTimeout);
+            console.log('⚠️ Erro na conexão MCP:', url);
+            reject(new Error(`Falha na conexão com ${url}`));
         };
         
         ws.onclose = () => {
+            clearTimeout(connectionTimeout);
             console.log('🔌 Conexão MCP fechada:', url);
             extensionState.mcpConnections.delete(connectionId);
             
@@ -342,8 +372,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
         extensionState.settings = changes.mcpChatSettings.newValue;
         console.log('⚙️ Configurações atualizadas:', extensionState.settings);
         
-        // Reconnect MCP if settings changed
-        if (changes.mcpChatSettings.newValue?.mcp?.url !== changes.mcpChatSettings.oldValue?.mcp?.url) {
+        // Reconnect MCP if settings changed and URL is valid
+        const oldUrl = changes.mcpChatSettings.oldValue?.mcp?.url;
+        const newUrl = changes.mcpChatSettings.newValue?.mcp?.url;
+        
+        if (newUrl && oldUrl !== newUrl) {
+            console.log('🔄 URL MCP alterada, tentando reconectar...');
             restoreMCPConnections();
         }
     }

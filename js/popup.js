@@ -7,9 +7,10 @@ class MCPChatExtension {
     constructor() {
         this.settings = {
             mcp: {
-                url: 'ws://localhost:8080/mcp',
+                url: '', // Remover URL padrão para evitar conexão automática
                 apiKey: '',
-                connected: false
+                connected: false,
+                autoReconnect: false // Adicionar controle de auto-reconexão
             },
             llm: {
                 provider: 'openai',
@@ -40,6 +41,9 @@ class MCPChatExtension {
         
         // Configurar event listeners
         this.setupEventListeners();
+        
+        // Verificar se precisa mostrar mensagem de boas-vindas
+        this.checkWelcomeMessage();
         
         // Atualizar status inicial
         this.updateConnectionStatus();
@@ -99,6 +103,15 @@ class MCPChatExtension {
 
     // ===== EVENT LISTENERS =====
     setupEventListeners() {
+        // Botões principais
+        document.getElementById('settingsToggle').addEventListener('click', () => {
+            this.toggleSettings();
+        });
+        
+        document.getElementById('openSettingsFromWelcome').addEventListener('click', () => {
+            this.toggleSettings();
+        });
+
         // Settings panel
         document.getElementById('settingsBtn').addEventListener('click', () => this.toggleSettings());
         document.getElementById('closeSettingsBtn').addEventListener('click', () => this.toggleSettings(false));
@@ -269,6 +282,9 @@ class MCPChatExtension {
             
             this.updateConnectionStatus();
             this.showNotification('✅ Configurações salvas com sucesso!', 'success');
+            
+            // Verificar se deve esconder mensagem de boas-vindas
+            this.checkWelcomeMessage();
             
             // Close settings panel
             setTimeout(() => {
@@ -804,6 +820,20 @@ class MCPChatExtension {
         // Process tool response and update chat if needed
         if (response.result) {
             this.addMessage(`🛠️ Ferramenta executada: ${response.result}`, 'system');
+        }
+    }
+
+    checkWelcomeMessage() {
+        const hasLLMConfig = this.settings.llm?.apiKey && this.settings.llm?.provider;
+        const welcomeElement = document.getElementById('welcomeMessage');
+        const messagesContainer = document.getElementById('messagesContainer');
+        
+        if (!hasLLMConfig) {
+            welcomeElement.style.display = 'block';
+            messagesContainer.style.display = 'none';
+        } else {
+            welcomeElement.style.display = 'none';
+            messagesContainer.style.display = 'flex';
         }
     }
 }

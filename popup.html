@@ -116,6 +116,38 @@
 
             <!-- Chat Interface -->
             <div id="chatInterface" class="chat-interface">
+                <!-- Welcome Message -->
+                <div id="welcomeMessage" class="welcome-message" style="display: none;">
+                    <div class="welcome-content">
+                        <h3>🎉 Bem-vindo ao Chrome MCP Chat!</h3>
+                        <p>Para começar a usar a extensão, você precisa configurar:</p>
+                        <div class="welcome-steps">
+                            <div class="step">
+                                <span class="step-number">1</span>
+                                <div class="step-content">
+                                    <strong>🧠 Configure um LLM</strong>
+                                    <p>Escolha um provedor (OpenAI, Anthropic, Local) e adicione sua API key</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2</span>
+                                <div class="step-content">
+                                    <strong>🔗 Configure o servidor MCP (opcional)</strong>
+                                    <p>Se você tem um servidor MCP, adicione a URL (ex: ws://localhost:8080/mcp)</p>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3</span>
+                                <div class="step-content">
+                                    <strong>💬 Comece a conversar!</strong>
+                                    <p>Use o chat ou clique com o botão direito em texto selecionado</p>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="openSettingsFromWelcome" class="btn btn-primary">⚙️ Abrir Configurações</button>
+                    </div>
+                </div>
+                
                 <!-- Messages Container -->
                 <div class="messages-container" id="messagesContainer">
                     <!-- Welcome Message -->
