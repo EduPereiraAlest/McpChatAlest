@@ -1014,12 +1014,26 @@ Responda em português brasileiro e seja útil e direto.`;
         if (toolCalls.length > 0 && this.settings.mcp.connected) {
             console.log('🔧 Executando', toolCalls.length, 'ferramenta(s) MCP...');
             
+            // Mostrar mensagem de progresso inicial
+            const progressMessage = this.addMessage('🔄 Executando comandos...', 'system');
+            
             for (const toolCall of toolCalls) {
                 try {
+                    // Mostrar progresso específico da ferramenta
+                    const toolProgress = this.getToolProgressMessage(toolCall.name, toolCall.params);
+                    this.updateProgressMessage(progressMessage, toolProgress);
+                    
                     console.log('🔧 Executando ferramenta:', toolCall.name, toolCall.params);
                     
                     // Chamar ferramenta via MCP
                     const toolResult = await this.callMCPTool(toolCall.name, toolCall.params);
+                    
+                    // Mostrar mensagem de sucesso
+                    const successMessage = this.getToolSuccessMessage(toolCall.name, toolResult);
+                    this.updateProgressMessage(progressMessage, successMessage);
+                    
+                    // Aguardar um pouco para o usuário ver o sucesso
+                    await new Promise(resolve => setTimeout(resolve, 800));
                     
                     // Substituir chamada de ferramenta pelo resultado
                     const resultText = `[RESULTADO: ${JSON.stringify(toolResult)}]`;
@@ -1031,20 +1045,109 @@ Responda em português brasileiro e seja útil e direto.`;
                     console.error('❌ Erro ao executar ferramenta:', toolCall.name, error);
                     const errorText = `[ERRO: ${error.message}]`;
                     processedResponse = processedResponse.replace(toolCall.originalMatch, errorText);
+                    
+                    // Mostrar erro no progresso
+                    this.updateProgressMessage(progressMessage, `❌ Erro ao executar ${toolCall.name}: ${error.message}`);
+                    
+                    // Aguardar um pouco para o usuário ver o erro
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
+            
+            // Atualizar progresso para "processando resultados"
+            this.updateProgressMessage(progressMessage, '🧠 Processando resultados...');
             
             // Se houve chamadas de ferramentas, enviar resposta processada de volta para LLM
             if (toolCalls.length > 0) {
                 console.log('🔄 Enviando resultados de volta para LLM...');
                 const finalResponse = await this.callLLM(
-                    `Contexto anterior: ${response}\n\nResultados das ferramentas: ${processedResponse}\n\nPor favor, processe estes resultados e forneça uma resposta clara ao usuário em português.`
+                    `Contexto anterior: ${response}\n\nResultados das ferramentas: ${processedResponse}\n\nPor favor, processe estes resultados e forneça uma resposta clara ao usuário em português. Seja direto e útil.`
                 );
+                
+                // Remover mensagem de progresso
+                this.removeProgressMessage(progressMessage);
+                
                 return finalResponse;
             }
         }
         
         return processedResponse;
+    }
+    
+    // Gerar mensagem de progresso específica para cada ferramenta
+    getToolProgressMessage(toolName, params) {
+        switch (toolName) {
+            case 'get_boards':
+                return '🔍 Buscando todos os seus boards no Monday.com...';
+            case 'get_board_items':
+                if (params.board_id) {
+                    return `📋 Carregando itens do board (ID: ${params.board_id})...`;
+                }
+                return '📋 Carregando itens do board...';
+            case 'create_item':
+                if (params.name && params.board_id) {
+                    return `➕ Criando item "${params.name}" no board ${params.board_id}...`;
+                } else if (params.name) {
+                    return `➕ Criando item "${params.name}"...`;
+                }
+                return '➕ Criando novo item...';
+            case 'update_item':
+                if (params.item_id) {
+                    return `✏️ Atualizando item (ID: ${params.item_id})...`;
+                }
+                return '✏️ Atualizando item...';
+            case 'get_users':
+                return '👥 Listando todos os membros da equipe Monday.com...';
+            default:
+                return `🔧 Executando comando ${toolName}...`;
+        }
+    }
+    
+    // Gerar mensagem de sucesso específica para cada ferramenta
+    getToolSuccessMessage(toolName, result) {
+        switch (toolName) {
+            case 'get_boards':
+                return `✅ Boards encontrados com sucesso!`;
+            case 'get_board_items':
+                if (result && result.length > 0) {
+                    return `✅ ${result.length} itens carregados do board.`;
+                }
+                return `✅ Nenhum item encontrado no board.`;
+            case 'create_item':
+                if (result && result.id) {
+                    return `✅ Item "${result.name}" criado com sucesso (ID: ${result.id}).`;
+                }
+                return `✅ Item criado com sucesso.`;
+            case 'update_item':
+                if (result && result.id) {
+                    return `✅ Item (ID: ${result.id}) atualizado com sucesso.`;
+                }
+                return `✅ Item atualizado com sucesso.`;
+            case 'get_users':
+                if (result && result.length > 0) {
+                    return `✅ ${result.length} usuários listados.`;
+                }
+                return `✅ Nenhum usuário encontrado.`;
+            default:
+                return `✅ Ferramenta "${toolName}" executada com sucesso.`;
+        }
+    }
+    
+    // Atualizar mensagem de progresso existente
+    updateProgressMessage(messageElement, newText) {
+        if (messageElement) {
+            const textDiv = messageElement.querySelector('.message-text');
+            if (textDiv) {
+                textDiv.innerHTML = `<div class="progress-message">${newText}</div>`;
+            }
+        }
+    }
+    
+    // Remover mensagem de progresso
+    removeProgressMessage(messageElement) {
+        if (messageElement && messageElement.parentNode) {
+            messageElement.parentNode.removeChild(messageElement);
+        }
     }
     
     // Chamar ferramenta específica via MCP
