@@ -3,6 +3,38 @@
  * Production-ready implementation with real MCP and LLM integrations
  */
 
+// Debug logging
+console.log('🚀 Popup script carregado');
+
+// Verificar se DOM está pronto
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeExtension);
+} else {
+    initializeExtension();
+}
+
+function initializeExtension() {
+    console.log('🔄 Inicializando extensão...');
+    try {
+        new MCPChatExtension();
+    } catch (error) {
+        console.error('❌ Erro na inicialização:', error);
+        // Mostrar erro na interface
+        document.body.innerHTML = `
+            <div style="padding: 20px; color: #ff6b6b; background: #2d2d2d; font-family: monospace;">
+                <h3>❌ Erro na Inicialização</h3>
+                <p><strong>Erro:</strong> ${error.message}</p>
+                <p><strong>Stack:</strong></p>
+                <pre style="font-size: 11px; opacity: 0.8;">${error.stack}</pre>
+                <br>
+                <button onclick="location.reload()" style="padding: 8px 16px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    🔄 Recarregar
+                </button>
+            </div>
+        `;
+    }
+}
+
 class MCPChatExtension {
     constructor() {
         this.settings = {
@@ -837,15 +869,3 @@ class MCPChatExtension {
         }
     }
 }
-
-// Initialize extension when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.mcpChat = new MCPChatExtension();
-});
-
-// Handle unload
-window.addEventListener('beforeunload', () => {
-    if (window.mcpChat && window.mcpChat.mcpConnection) {
-        window.mcpChat.mcpConnection.close();
-    }
-});
